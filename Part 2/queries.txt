@@ -1,0 +1,196 @@
+Заявки към структурата:
+
+1.
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX movies: <http://www.semanticweb.org/owner/ontologies/2024/0/movies-ontology#>
+
+SELECT ?subClass
+WHERE {
+  ?subClass rdfs:subClassOf movies:Person.
+}
+
+
+2. 
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX movies: <http://www.semanticweb.org/owner/ontologies/2024/0/movies-ontology#>
+
+SELECT ?movieName ?genre
+WHERE {
+  ?movie a movies:Movie;
+         movies:movieName ?movieName; 
+         movies:hasGenre ?genre .
+}
+
+Примери с операции над множества:
+
+3. 
+PREFIX movies: <http://www.semanticweb.org/owner/ontologies/2024/0/movies-ontology#>
+
+select ?movieName where {
+    {
+        ?movie a movies:Movie;
+               movies:movieName ?movieName;
+               movies:hasGenre movies:Adventure.
+    }
+    UNION
+    {
+        ?movie a movies:Movie;
+               movies:movieName ?movieName;
+               movies:hasGenre movies:Romance.
+    }
+} 
+
+4.
+PREFIX movies: <http://www.semanticweb.org/owner/ontologies/2024/0/movies-ontology#>
+
+select ?name where {
+    {
+        ?person a movies:Person;
+                movies:name ?name.
+    }
+    MINUS
+    {
+        ?person a movies:Singer;
+                movies:name ?name.
+    }
+}
+
+Примери с логически извод:
+
+5.
+PREFIX movies: <http://www.semanticweb.org/owner/ontologies/2024/0/movies-ontology#>
+
+SELECT ?actorName ?movieName WHERE {
+    ?actor a movies:Person;
+             movies:name ?actorName;
+             movies:playesIn ?movie.
+    ?movie   movies:movieName ?movieName;
+             movies:hasDirector ?director.
+}
+
+6.
+PREFIX movies: <http://www.semanticweb.org/owner/ontologies/2024/0/movies-ontology#>
+
+SELECT ?series ?movieName WHERE {
+    ?movie   a movies:Movie;
+             movies:movieName ?movieName;
+             movies:inSeries ?series.
+    ?series  a movies:Series.
+} 
+
+7.
+PREFIX movies: <http://www.semanticweb.org/owner/ontologies/2024/0/movies-ontology#>
+
+SELECT ?directorName (COUNT(?movie) AS ?movieCount) WHERE {
+    ?director a movies:Person;
+              movies:name ?directorName.
+    ?movie movies:hasDirector ?director.
+}
+GROUP BY ?directorName
+ORDER BY DESC(?movieCount)
+
+Заявки с FILTER:
+
+8. 
+PREFIX movies: <http://www.semanticweb.org/owner/ontologies/2024/0/movies-ontology#>
+
+SELECT ?movieName ?movieYear WHERE {
+    ?movie   a movies:Movie;
+             movies:movieName ?movieName;
+             movies:movieYear ?movieYear.
+    FILTER (?movieYear > 2003)
+}
+
+9.
+PREFIX movies: <http://www.semanticweb.org/owner/ontologies/2024/0/movies-ontology#>
+
+select ?movieName ?genre where {
+        ?movie a movies:Movie;
+               movies:movieName ?movieName;
+               movies:hasGenre ?genre.
+    FILTER(?genre IN (movies:Drama, movies:Family))
+} 
+
+10.
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX movies: <http://www.semanticweb.org/owner/ontologies/2024/0/movies-ontology#>
+
+SELECT distinct ?movieName
+WHERE {
+  ?movie a movies:Movie;
+         movies:movieName ?movieName; 
+         movies:hasGenre ?genre .
+    FILTER NOT EXISTS {
+        ?movie movies:hasGenre movies:Fantasy .
+    }
+}
+
+Примери с използването на BIND
+
+11.
+PREFIX movies: <http://www.semanticweb.org/owner/ontologies/2024/0/movies-ontology#>
+
+select ?statement where {
+    ?person a movies:Person;
+             movies:name ?personName;
+             movies:wrote ?book.
+    ?movie   movies:basedOn ?book;
+             movies:movieName ?movieName.
+    ?book    movies:bookName ?bookName.
+    BIND (CONCAT("The movie \"", ?movieName, "\" was based on the book \"", ?bookName, "\" by ", ?personName) as ?statement)
+} 
+
+12.
+PREFIX movies: <http://www.semanticweb.org/owner/ontologies/2024/0/movies-ontology#>
+
+SELECT ?statement WHERE {
+    ?actor a movies:Person;
+             movies:name ?actorName.
+    ?movie   movies:hasActor ?actor;
+             movies:movieName ?movieName;
+             movies:hasDirector ?director.
+    ?director a movies:Person;
+             movies:name ?directorName.
+    BIND (CONCAT("The actor ", ?actorName, " has played in the movie \"", ?movieName, "\" by ", ?directorName) as ?statement)
+} 
+
+13.
+PREFIX movies: <http://www.semanticweb.org/owner/ontologies/2024/0/movies-ontology#>
+
+SELECT ?statement WHERE {
+    ?movie   a movies:Movie;
+             movies:hasSoundtrack ?soundtrack;
+             movies:movieName ?movieName.
+    ?soundtrack a movies:Soundtrack;
+             movies:songName ?soundtrackName.
+    ?singer  a movies:Singer;
+             movies:name ?singerName;
+             movies:sing ?soundtrack.
+    BIND (CONCAT("The movie \"", ?movieName, "\" has soundtrack \"", ?soundtrackName, "\" by ", ?singerName) as ?statement)
+} 
+
+Допълнителни заявки:
+
+14.
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX movies: <http://www.semanticweb.org/owner/ontologies/2024/0/movies-ontology#>
+
+SELECT ?genre (COUNT(?film) AS ?filmCount)
+WHERE {
+  ?film a movies:Movie;
+        movies:hasGenre ?genre .
+}
+GROUP BY ?genre
+HAVING (COUNT(?film) >= 2)
+
+
+15.
+PREFIX movies: <http://www.semanticweb.org/owner/ontologies/2024/0/movies-ontology#>
+
+SELECT ?actorName ?movieName WHERE {
+    ?actor a movies:Person;
+             movies:name ?actorName;
+             movies:playesIn ?movie.
+    ?movie   movies:movieName ?movieName;
+             movies:hasDirector ?actor.
+}
